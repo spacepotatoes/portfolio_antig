@@ -31,6 +31,16 @@ export default function ChatBot() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages])
 
+    useEffect(() => {
+        function onOpenChat(e: Event) {
+            const { message } = (e as CustomEvent<{ message: string }>).detail
+            setIsOpen(true)
+            setTimeout(() => handleSend(message), 50)
+        }
+        window.addEventListener('open-chat', onOpenChat)
+        return () => window.removeEventListener('open-chat', onOpenChat)
+    }, [])
+
     function handleSend(text: string) {
         if (!text.trim() || isLoading) return
         sendMessage({ text })

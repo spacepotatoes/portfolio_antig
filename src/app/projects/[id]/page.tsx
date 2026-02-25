@@ -2,6 +2,7 @@ import { getProjectById } from '@/app/actions/projects'
 import { notFound } from 'next/navigation'
 import UserJourneyChart from '@/components/UserJourneyChart'
 import EmpathyMap from '@/components/EmpathyMap'
+import ChatTriggerButton from '@/components/ChatTriggerButton'
 import { ArrowLeft, AlertCircle, Layers, MapPin } from 'lucide-react'
 import Link from 'next/link'
 
@@ -172,6 +173,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                             {techItems.length} {techItems.length === 1 ? 'Technologie' : 'Technologien'} im Einsatz
                         </p>
                     </div>
+
+                    {/* Chat Trigger */}
+                    <ChatTriggerButton projectTitle={project.title} />
                 </div>
             </section>
         </div>
