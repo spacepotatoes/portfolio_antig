@@ -1,0 +1,40 @@
+{
+    "title": "Antigravity Portfolio Manager",
+    "description": "Entwicklung einer hochperformanten Portfolio-Plattform für Designer und Entwickler. Fokus auf nahtlose Figma-Integration durch automatisierte Design-Token-Synchronisation und ein integriertes UX-Case-Study-System mit Empathy Maps und User Journeys.",
+    "category": "Webentwickler",
+    "techStack": "Next.js 15, Tailwind CSS v4, Prisma, SQLite, Clerk Auth, GSAP, Lucide Icons, Chart.js",
+    "persona": {
+        "name": "Giuseppe Troiano",
+        "bio": "Ein leidenschaftlicher Fullstack-Entwickler und Designer, der nach effizienten Wegen sucht, seine Projekte professionell zu dokumentieren und Designentscheidungen visuell zu begründen.",
+        "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80"
+    },
+    "painPoints": [
+        "Manueller Export von Design-Tokens aus Figma ist zeitaufwendig.",
+        "Dokumentation von UX-Prozessen in Portfolios wirkt oft unstrukturiert.",
+        "Schwierigkeit, komplexe Web-Animationen performant umzusetzen."
+    ],
+    "empathyMap": {
+        "says": "Mein Portfolio muss so gut aussehen wie meine Projekte.",
+        "thinks": "Wie kann ich den Prozess von Design zu Code beschleunigen?",
+        "feels": "Motiviert durch moderne Web-Technologien und sauberen Code.",
+        "does": "Experimentiert mit Tailwind v4 und agentischen KI-Workflows."
+    },
+    "userJourney": [
+        {
+            "label": "Konzeption",
+            "value": 90
+        },
+        {
+            "label": "Design in Figma",
+            "value": 75
+        },
+        {
+            "label": "Entwicklung",
+            "value": 95
+        },
+        {
+            "label": "Go-Live",
+            "value": 100
+        }
+    ]
+}

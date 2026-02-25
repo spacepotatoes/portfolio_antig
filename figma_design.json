@@ -1,0 +1,201 @@
+{
+    "name": "Portfolio Antigravity Expanded Styleguide",
+    "version": "1.1.0",
+    "description": "Expanded design tokens for portfolio_antigravity01 including buttons, typography scale, and form elements.",
+    "tokens": {
+        "color": {
+            "light": {
+                "background": {
+                    "$value": "#ffffff",
+                    "$type": "color"
+                },
+                "foreground": {
+                    "$value": "#09090b",
+                    "$type": "color"
+                },
+                "surface": {
+                    "$value": "#f4f4f5",
+                    "$type": "color"
+                },
+                "surface-hover": {
+                    "$value": "#e4e4e7",
+                    "$type": "color"
+                },
+                "border": {
+                    "$value": "#e4e4e7",
+                    "$type": "color"
+                },
+                "muted": {
+                    "$value": "#71717a",
+                    "$type": "color"
+                },
+                "accent": {
+                    "$value": "#000000",
+                    "$type": "color"
+                }
+            },
+            "dark": {
+                "background": {
+                    "$value": "#000000",
+                    "$type": "color"
+                },
+                "foreground": {
+                    "$value": "#ffffff",
+                    "$type": "color"
+                },
+                "surface": {
+                    "$value": "#18181b",
+                    "$type": "color"
+                },
+                "surface-hover": {
+                    "$value": "#27272a",
+                    "$type": "color"
+                },
+                "border": {
+                    "$value": "#27272a",
+                    "$type": "color"
+                },
+                "muted": {
+                    "$value": "#a1a1aa",
+                    "$type": "color"
+                },
+                "accent": {
+                    "$value": "#ffffff",
+                    "$type": "color"
+                }
+            }
+        },
+        "typography": {
+            "fontFamilies": {
+                "main": {
+                    "$value": "Inter",
+                    "$type": "fontFamily"
+                }
+            },
+            "scale": {
+                "hero": {
+                    "main": {
+                        "fontSize": {
+                            "$value": "80px",
+                            "$type": "dimension"
+                        },
+                        "fontWeight": {
+                            "$value": "700",
+                            "$type": "fontWeight"
+                        },
+                        "lineHeight": {
+                            "$value": "1.1",
+                            "$type": "number"
+                        },
+                        "letterSpacing": {
+                            "$value": "-0.025em",
+                            "$type": "dimension"
+                        }
+                    },
+                    "sub": {
+                        "fontSize": {
+                            "$value": "80px",
+                            "$type": "dimension"
+                        },
+                        "fontWeight": {
+                            "$value": "700",
+                            "$type": "fontWeight"
+                        },
+                        "lineHeight": {
+                            "$value": "1.1",
+                            "$type": "number"
+                        },
+                        "letterSpacing": {
+                            "$value": "-0.025em",
+                            "$type": "dimension"
+                        }
+                    }
+                },
+                "h1": {
+                    "$value": "48px",
+                    "$type": "dimension"
+                },
+                "h2": {
+                    "$value": "36px",
+                    "$type": "dimension"
+                },
+                "h3": {
+                    "$value": "24px",
+                    "$type": "dimension"
+                },
+                "body": {
+                    "$value": "18px",
+                    "$type": "dimension"
+                },
+                "small": {
+                    "$value": "14px",
+                    "$type": "dimension"
+                }
+            }
+        },
+        "border": {
+            "radius": {
+                "md": {
+                    "$value": "0.5rem",
+                    "$type": "dimension"
+                },
+                "xl": {
+                    "$value": "0.75rem",
+                    "$type": "dimension"
+                },
+                "full": {
+                    "$value": "9999px",
+                    "$type": "dimension"
+                }
+            }
+        },
+        "button": {
+            "primary": {
+                "background": {
+                    "$value": "{color.light.foreground}",
+                    "$type": "color"
+                },
+                "text": {
+                    "$value": "{color.light.background}",
+                    "$type": "color"
+                },
+                "hover": {
+                    "$value": "#1a1a1a",
+                    "$type": "color"
+                }
+            },
+            "secondary": {
+                "background": {
+                    "$value": "transparent",
+                    "$type": "color"
+                },
+                "border": {
+                    "$value": "{color.light.border}",
+                    "$type": "color"
+                },
+                "text": {
+                    "$value": "{color.light.foreground}",
+                    "$type": "color"
+                },
+                "hover": {
+                    "$value": "{color.light.surface}",
+                    "$type": "color"
+                }
+            }
+        },
+        "input": {
+            "background": {
+                "$value": "{color.light.surface}",
+                "$type": "color"
+            },
+            "border": {
+                "$value": "{color.light.border}",
+                "$type": "color"
+            },
+            "focus": {
+                "$value": "{color.light.foreground}",
+                "$type": "color"
+            }
+        }
+    }
+}

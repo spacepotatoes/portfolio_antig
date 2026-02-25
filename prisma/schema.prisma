@@ -1,0 +1,33 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id               Int      @id @default(autoincrement())
+  title            String
+  description      String
+  imageUrl         String
+  category         String   // Webdesign, Webentwickler, Fotograf
+  techStack        String   // Store as comma-separated string
+  
+  // UX Case Study Fields
+  personaName      String?
+  personaImage     String?
+  personaBio       String?
+  painPoints       String?  // comma-separated or text
+  userJourneyData  String?  // JSON string for Chart.js
+  
+  // Empathy Map
+  empathySays      String?
+  empathyThinks    String?
+  empathyFeels     String?
+  empathyDoes      String?
+
+  createdAt        DateTime @default(now())
+}
