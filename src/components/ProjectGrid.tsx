@@ -36,11 +36,17 @@ export default function ProjectGrid({ initialProjects, activeCategory }: Project
                             className={`group relative stagger-item ${isPhotography ? "masonry-item" : "bg-surface rounded-xl border border-border-custom overflow-hidden hover:border-foreground transition-colors"}`}
                         >
                             <div className={`relative overflow-hidden ${isPhotography ? "h-full cursor-zoom-in" : "aspect-video cursor-pointer"}`}>
-                                <img
-                                    src={project.imageUrl}
-                                    alt={project.title}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
+                                {project.imageUrl ? (
+                                    <img
+                                        src={project.imageUrl}
+                                        alt={project.title}
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-surface flex items-center justify-center text-muted-custom text-xs uppercase tracking-widest">
+                                        Kein Bild
+                                    </div>
+                                )}
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     {isPhotography ? (
                                         <button onClick={() => setSelectedImage(project.imageUrl)}>
