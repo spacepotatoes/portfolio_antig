@@ -112,9 +112,13 @@ export default function EditProjectForm({ project }: { project: Project }) {
     async function handleSubmit(formData: FormData) {
         setIsPending(true)
         try {
-            await updateProject(project.id, formData)
-            router.push('/admin')
-            router.refresh()
+            const result = await updateProject(project.id, formData)
+            if (result.success) {
+                router.push('/admin')
+                router.refresh()
+            } else {
+                alert(result.error || 'Fehler beim Aktualisieren des Projekts')
+            }
         } catch (error) {
             console.error(error)
             alert('Fehler beim Aktualisieren des Projekts')

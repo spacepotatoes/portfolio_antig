@@ -147,94 +147,100 @@ export async function createProject(formData: FormData): Promise<{ success: bool
     }
 }
 
-export async function updateProject(id: number, formData: FormData) {
-    await checkAdmin()
+export async function updateProject(id: number, formData: FormData): Promise<{ success: boolean; error?: string }> {
+    try {
+        await checkAdmin()
 
-    const title = formData.get('title') as string
-    const description = formData.get('description') as string
-    const category = formData.get('category') as string
-    const techStack = formData.get('techStack') as string
+        const title = formData.get('title') as string
+        const description = formData.get('description') as string
+        const category = formData.get('category') as string
+        const techStack = formData.get('techStack') as string
 
-    // UX Fields
-    const personaName = formData.get('personaName') as string
-    const personaBio = formData.get('personaBio') as string
-    const painPoints = formData.get('painPoints') as string
-    const userJourneyData = formData.get('userJourneyData') as string
+        // UX Fields
+        const personaName = formData.get('personaName') as string
+        const personaBio = formData.get('personaBio') as string
+        const painPoints = formData.get('painPoints') as string
+        const userJourneyData = formData.get('userJourneyData') as string
 
-    // Empathy Map
-    const empathySays = formData.get('empathySays') as string
-    const empathyThinks = formData.get('empathyThinks') as string
-    const empathyFeels = formData.get('empathyFeels') as string
-    const empathyDoes = formData.get('empathyDoes') as string
+        // Empathy Map
+        const empathySays = formData.get('empathySays') as string
+        const empathyThinks = formData.get('empathyThinks') as string
+        const empathyFeels = formData.get('empathyFeels') as string
+        const empathyDoes = formData.get('empathyDoes') as string
 
-    const imageFile = formData.get('imageFile') as File | null
-    const imageUrlInput = formData.get('imageUrl') as string
-    const personaFile = formData.get('personaFile') as File | null
-    const personaImageUrlInput = formData.get('personaImage') as string
+        const imageFile = formData.get('imageFile') as File | null
+        const imageUrlInput = formData.get('imageUrl') as string
+        const personaFile = formData.get('personaFile') as File | null
+        const personaImageUrlInput = formData.get('personaImage') as string
 
-    let imageUrl = imageUrlInput
-    let personaImage = personaImageUrlInput
+        let imageUrl = imageUrlInput
+        let personaImage = personaImageUrlInput
 
-    // Upload Main Project Image if a new one is provided
-    if (imageFile && imageFile.size > 0) {
-        try {
-            imageUrl = await uploadToCloudinary(imageFile, 'covers')
-        } catch (error) {
-            console.error('Cloudinary Upload Error (Cover):', error)
-            throw new Error('Fehler beim Hochladen des Projekt-Covers')
-        }
-    }
-
-    // Upload Persona Image if a new one is provided
-    if (personaFile && personaFile.size > 0) {
-        try {
-            personaImage = await uploadToCloudinary(personaFile, 'personas')
-        } catch (error) {
-            console.error('Cloudinary Upload Error (Persona):', error)
-            throw new Error('Fehler beim Hochladen des Persona-Bildes')
-        }
-    }
-
-    // Upload Gallery Images (merge existing with new)
-    const existingGalleryJson = formData.get('existingGallery') as string
-    const existingGallery: string[] = existingGalleryJson ? JSON.parse(existingGalleryJson) : []
-    const galleryUrls: string[] = [...existingGallery]
-    for (let i = 0; i < 5; i++) {
-        const galleryFile = formData.get(`galleryFile_${i}`) as File | null
-        const galleryUrlInput = formData.get(`galleryUrl_${i}`) as string
-        if (galleryFile && galleryFile.size > 0) {
+        // Upload Main Project Image if a new one is provided
+        if (imageFile && imageFile.size > 0) {
             try {
-                galleryUrls.push(await uploadToCloudinary(galleryFile, 'gallery'))
+                imageUrl = await uploadToCloudinary(imageFile, 'covers')
             } catch (error) {
-                console.error(`Cloudinary Upload Error (Gallery ${i}):`, error)
+                console.error('Cloudinary Upload Error (Cover):', error)
+                return { success: false, error: 'Fehler beim Hochladen des Projekt-Covers' }
             }
-        } else if (galleryUrlInput) {
-            galleryUrls.push(galleryUrlInput)
         }
+
+        // Upload Persona Image if a new one is provided
+        if (personaFile && personaFile.size > 0) {
+            try {
+                personaImage = await uploadToCloudinary(personaFile, 'personas')
+            } catch (error) {
+                console.error('Cloudinary Upload Error (Persona):', error)
+                return { success: false, error: 'Fehler beim Hochladen des Persona-Bildes' }
+            }
+        }
+
+        // Upload Gallery Images (merge existing with new)
+        const existingGalleryJson = formData.get('existingGallery') as string
+        const existingGallery: string[] = existingGalleryJson ? JSON.parse(existingGalleryJson) : []
+        const galleryUrls: string[] = [...existingGallery]
+        for (let i = 0; i < 5; i++) {
+            const galleryFile = formData.get(`galleryFile_${i}`) as File | null
+            const galleryUrlInput = formData.get(`galleryUrl_${i}`) as string
+            if (galleryFile && galleryFile.size > 0) {
+                try {
+                    galleryUrls.push(await uploadToCloudinary(galleryFile, 'gallery'))
+                } catch (error) {
+                    console.error(`Cloudinary Upload Error (Gallery ${i}):`, error)
+                }
+            } else if (galleryUrlInput) {
+                galleryUrls.push(galleryUrlInput)
+            }
+        }
+        const galleryImages = galleryUrls.length > 0 ? JSON.stringify(galleryUrls) : null
+
+        await (prisma.project as any).update({
+            where: { id },
+            data: {
+                title,
+                description,
+                category,
+                techStack,
+                imageUrl,
+                personaName,
+                personaImage,
+                personaBio,
+                painPoints,
+                userJourneyData,
+                empathySays,
+                empathyThinks,
+                empathyFeels,
+                empathyDoes,
+                galleryImages,
+            } as any,
+        })
+
+        revalidatePath('/')
+        revalidatePath('/admin')
+        return { success: true }
+    } catch (err) {
+        console.error('updateProject error:', err)
+        return { success: false, error: err instanceof Error ? err.message : 'Unbekannter Fehler' }
     }
-    const galleryImages = galleryUrls.length > 0 ? JSON.stringify(galleryUrls) : null
-
-    await (prisma.project as any).update({
-        where: { id },
-        data: {
-            title,
-            description,
-            category,
-            techStack,
-            imageUrl,
-            personaName,
-            personaImage,
-            personaBio,
-            painPoints,
-            userJourneyData,
-            empathySays,
-            empathyThinks,
-            empathyFeels,
-            empathyDoes,
-            galleryImages,
-        } as any,
-    })
-
-    revalidatePath('/')
-    revalidatePath('/admin')
 }
