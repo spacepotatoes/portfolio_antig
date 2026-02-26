@@ -177,7 +177,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
           <div className="flex flex-col items-center gap-12">
             <Button
-              href="mailto:contact@antigravity.ai"
+              href="mailto:hello@giuseppe-troiano.de"
               iconLeft={<Mail className="w-5 h-5" />}
             >
               Schreib mir

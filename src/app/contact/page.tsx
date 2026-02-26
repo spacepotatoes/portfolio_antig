@@ -8,16 +8,20 @@ import { motion } from 'framer-motion'
 export default function ContactPage() {
     const [isPending, setIsPending] = useState(false)
     const [isSuccess, setIsSuccess] = useState(false)
+    const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
     async function handleSubmit(formData: FormData) {
         setIsPending(true)
+        setErrorMsg(null)
         try {
             const result = await sendContactMessage(formData)
             if (result.success) {
                 setIsSuccess(true)
+            } else {
+                setErrorMsg(result.error ?? 'Unbekannter Fehler.')
             }
-        } catch (error) {
-            alert('Fehler beim Senden der Nachricht.')
+        } catch {
+            setErrorMsg('Fehler beim Senden der Nachricht.')
         } finally {
             setIsPending(false)
         }
@@ -61,7 +65,7 @@ export default function ContactPage() {
                 </p>
                 <div className="pt-8 space-y-4">
                     <p className="text-sm font-bold uppercase tracking-widest text-muted-custom/60">Kontaktinfo</p>
-                    <p className="text-2xl font-bold">hello@antigravity.ai</p>
+                    <p className="text-2xl font-bold">hello@giuseppe-troiano.de</p>
                     <p className="text-muted-custom">Berlin, Deutschland</p>
                 </div>
             </motion.div>
@@ -91,6 +95,11 @@ export default function ContactPage() {
                     <label htmlFor="message" className="text-xs font-bold uppercase tracking-[0.2em] text-muted-custom">Nachricht</label>
                     <textarea required id="message" name="message" rows={6} className="w-full bg-background border border-border-custom rounded-xl px-4 py-3 focus:border-foreground outline-none transition-colors resize-none" placeholder="Was hast du im Kopf?"></textarea>
                 </div>
+                {errorMsg && (
+                    <p className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+                        {errorMsg}
+                    </p>
+                )}
                 <button
                     disabled={isPending}
                     type="submit"

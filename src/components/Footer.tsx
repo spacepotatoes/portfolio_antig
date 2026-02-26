@@ -98,11 +98,11 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="mailto:contact@antigravity.ai"
+                  href="mailto:hello@giuseppe-troiano.de"
                   className="flex items-center gap-2 text-sm text-muted-custom hover:text-foreground transition-colors group"
                 >
                   <Mail size={14} className="shrink-0" />
-                  contact@antigravity.ai
+                  hello@giuseppe-troiano.de
                 </a>
               </li>
               <li>
