@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Trash2, Plus, ExternalLink, Pencil, Settings, Star } from 'lucide-react'
 
 export default async function AdminDashboard() {
-    const projects = await getProjects()
+    const projects = await getProjects().catch(() => [])
 
     return (
         <div className="min-h-screen bg-background text-foreground p-8 transition-colors duration-300">

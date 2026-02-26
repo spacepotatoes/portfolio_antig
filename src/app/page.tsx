@@ -20,7 +20,7 @@ interface HomeProps {
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams
   const activeCategory = params.category || 'all'
-  const projects = await getProjects()
+  const projects = await getProjects().catch(() => [])
   const testimonials = await getTestimonials().catch(() => [])
 
   return (
