@@ -9,7 +9,7 @@ import Link from 'next/link'
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const project = await getProjectById(parseInt(id)) as any
+    const project = await getProjectById(parseInt(id)).catch(() => null) as any
 
     if (!project) notFound()
 

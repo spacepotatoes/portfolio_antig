@@ -10,7 +10,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
         redirect('/admin')
     }
 
-    const project = await getProjectById(projectId)
+    const project = await getProjectById(projectId).catch(() => null)
 
     if (!project) {
         redirect('/admin')

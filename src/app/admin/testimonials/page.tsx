@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Trash2, Plus, Pencil, Star } from 'lucide-react'
 
 export default async function AdminTestimonials() {
-    const testimonials = await getTestimonials()
+    const testimonials = await getTestimonials().catch(() => [] as Awaited<ReturnType<typeof getTestimonials>>)
 
     return (
         <div className="min-h-screen bg-background text-foreground p-8">
