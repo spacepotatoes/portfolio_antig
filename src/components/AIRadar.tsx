@@ -2,27 +2,23 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Newspaper,
-  Image as ImageIcon,
-  Video,
-  Code,
   RefreshCw,
-  ExternalLink,
-  TrendingUp,
   Clock,
   ChevronRight,
   Zap,
   AlertCircle,
   Info,
-  ShieldCheck
+  Cpu,
+  Wrench,
+  GitBranch,
 } from 'lucide-react';
 
 const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? '';
 
 interface News {
-  image: NewsItem[];
-  video: NewsItem[];
-  coding: NewsItem[];
+  models: NewsItem[];
+  tools: NewsItem[];
+  opensource: NewsItem[];
 }
 
 interface NewsItem {
@@ -34,141 +30,100 @@ interface NewsItem {
   date?: string;
 }
 
-export default function AIRadar() {
-  const [news, setNews] = useState<News>({
-    image: [],
-    video: [],
-    coding: []
-  });
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('image');
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+const TODAY = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  /**
-   * Kern-Funktion für den API-Aufruf an Gemini 2.5 Flash.
-   * Implementiert Exponential Backoff für maximale Stabilität bei Rate Limits.
-   */
-  const fetchGeminiNews = async (categoryQuery: string, retryCount = 0): Promise<NewsItem[]> => {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+const QUERIES = {
+  models: `Heute ist der ${TODAY}. Durchsuche das Web nach den allerneuesten KI-Sprachmodellen und multimodalen Modellen (LLMs, Image, Video, Audio). Fokus auf Releases und Ankündigungen der letzten 7 Tage. Quellen: Anthropic Blog, OpenAI Blog, Google DeepMind, Meta AI, Mistral, xAI, Arxiv, The Verge, TechCrunch. Gib mindestens 5 aktuelle Artikel zurück.`,
+  tools: `Heute ist der ${TODAY}. Durchsuche das Web nach brandneuen KI-Tools, Apps, APIs und Produkten der letzten 7 Tage. Fokus auf neue Features, Launches, Updates bei Tools wie Cursor, GitHub Copilot, Perplexity, Midjourney, RunwayML, ElevenLabs, Hugging Face Spaces, und andere KI-Produkte. Gib mindestens 5 aktuelle Artikel zurück.`,
+  opensource: `Heute ist der ${TODAY}. Durchsuche GitHub Trending, Hugging Face und Arxiv nach den aktuellsten Open-Source KI-Projekten, Modellen und Paper-Releases der letzten 7 Tage. Fokus auf neue Repos mit vielen Stars, neue Hugging Face Modelle, neue Arxiv-Paper. Gib mindestens 5 aktuelle Einträge zurück.`,
+};
 
-    const systemPrompt = "Du bist ein KI-Nachrichten-Bot. Deine Aufgabe ist es, die aktuellsten News der letzten 7 Tage zu finden. Antworte ausschließlich im JSON-Format. Das JSON muss ein Objekt mit einem Array 'articles' sein. Jedes Objekt im Array benötigt: title, summary, source, url (echte Links!), tags (Array) und date.";
+async function fetchGeminiNews(query: string, retryCount = 0): Promise<NewsItem[]> {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-    const payload = {
-      contents: [{
-        parts: [{ text: categoryQuery }]
-      }],
-      systemInstruction: {
-        parts: [{ text: systemPrompt }]
-      },
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            articles: {
-              type: "ARRAY",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  title: { type: "string" },
-                  summary: { type: "string" },
-                  source: { type: "string" },
-                  url: { type: "string" },
-                  tags: { type: "array", items: { type: "string" } },
-                  date: { type: "string" }
-                },
-                required: ["title", "summary", "url"]
-              }
-            }
-          }
-        }
-      }
-    };
-
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error("API Error Details:", {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorData,
-        });
-
-        if (response.status === 401) {
-          throw new Error("Authentifizierungsfehler (401). Der API-Schlüssel konnte nicht validiert werden. Bitte lade die Seite neu oder klicke auf 'News aktualisieren'.");
-        }
-
-        if (response.status === 403) {
-          throw new Error("Zugriff verweigert (403). Die API könnte nicht aktiviert sein oder der API-Key hat nicht die richtige Berechtigung.");
-        }
-
-        if (response.status === 429 && retryCount < 5) {
-          const delay = Math.pow(2, retryCount) * 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return fetchGeminiNews(categoryQuery, retryCount + 1);
-        }
-
-        throw new Error(`API Fehler: ${response.status} (${response.statusText})`);
-      }
-
-      const result = await response.json();
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!text) return [];
-
-      const parsed = JSON.parse(text);
-      return parsed.articles || [];
-    } catch (err) {
-      console.error("Fetch Error:", err);
-      throw err;
+  const payload = {
+    contents: [{
+      parts: [{
+        text: query + '\n\nAntworte NUR mit einem JSON-Objekt (kein Markdown, keine Erklärungen): {"articles": [{"title":"...","summary":"...","source":"...","url":"...","tags":["..."],"date":"TT.MM.JJJJ"}]}'
+      }]
+    }],
+    tools: [{ google_search: {} }],
+    generationConfig: {
+      temperature: 0.2,
+      maxOutputTokens: 2048,
     }
   };
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      if (response.status === 429 && retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1500;
+        await new Promise(r => setTimeout(r, delay));
+        return fetchGeminiNews(query, retryCount + 1);
+      }
+      if (response.status === 401) throw new Error('Authentifizierungsfehler (401). Bitte API-Key prüfen.');
+      if (response.status === 403) throw new Error('Zugriff verweigert (403). Generative Language API aktivieren.');
+      throw new Error(`API Fehler: ${response.status}`);
+    }
+
+    const result = await response.json();
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+
+    // Extract JSON from response (grounding may add extra text)
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return [];
+    const parsed = JSON.parse(match[0]);
+    return parsed.articles ?? [];
+  } catch (err) {
+    if (err instanceof SyntaxError) return [];
+    throw err;
+  }
+}
+
+export default function AIRadar() {
+  const [news, setNews] = useState<News>({ models: [], tools: [], opensource: [] });
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('models');
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   const loadAllData = async () => {
     setLoading(true);
     setError(null);
 
-    const queries = {
-      image: "Finde die neuesten Releases für KI-Bildmodelle (z.B. Flux.1, Midjourney v6.1, neue Stable Diffusion Lora) der letzten 7 Tage. Was sind die Top-Themen auf Hugging Face?",
-      video: "Suche nach neuen KI-Videomodellen wie Sora, Kling, Luma Dream Machine oder Runway Gen-3. Welche neuen Features wurden diese Woche veröffentlicht?",
-      coding: "Finde News zu Coding-KIs: Neue Claude 3.5 Sonnet Benchmarks, DeepSeek V2.5, GitHub Copilot Extensions oder neue Open-Source-LLMs für Entwickler."
-    };
-
     try {
-      const results: any = {};
-      for (const [key, query] of Object.entries(queries)) {
-        try {
-          results[key] = await fetchGeminiNews(query);
-        } catch (e) {
-          console.warn(`Fehler beim Abruf von ${key}:`, e);
-          results[key] = [];
-          if (!error) setError((e as Error).message);
-        }
-      }
+      const [models, tools, opensource] = await Promise.all([
+        fetchGeminiNews(QUERIES.models).catch(e => { setError(e.message); return []; }),
+        fetchGeminiNews(QUERIES.tools).catch(e => { setError(e.message); return []; }),
+        fetchGeminiNews(QUERIES.opensource).catch(e => { setError(e.message); return []; }),
+      ]);
 
-      setNews(results);
+      setNews({ models, tools, opensource });
       setLastUpdated(new Date().toLocaleTimeString('de-DE'));
-    } catch (err) {
-      setError("Datenabruf fehlgeschlagen. Bitte prüfe die API-Verbindung.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadAllData();
-  }, []);
+  useEffect(() => { loadAllData(); }, []);
+
+  const tabs = [
+    { id: 'models', label: 'Neue Modelle', icon: <Cpu className="w-4 h-4" /> },
+    { id: 'tools', label: 'Tools & APIs', icon: <Wrench className="w-4 h-4" /> },
+    { id: 'opensource', label: 'Open Source', icon: <GitBranch className="w-4 h-4" /> },
+  ];
+
+  const currentItems = news[activeTab as keyof News] ?? [];
 
   return (
     <div className="w-full">
-      {/* Header / Navbar */}
+      {/* Header */}
       <div className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border-custom px-6 py-4 mb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
@@ -177,7 +132,7 @@ export default function AIRadar() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground">AI RADAR</h2>
-              <div className="text-xs text-muted-custom font-medium">KI-News & Updates</div>
+              <div className="text-xs text-muted-custom font-medium">Neueste KI-Modelle & Tools – Live via Google Search</div>
             </div>
           </div>
 
@@ -194,7 +149,7 @@ export default function AIRadar() {
               className="group relative flex items-center gap-2 bg-accent text-white hover:opacity-90 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-semibold transition-all active:scale-95"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-              {loading ? 'Aktualisiert...' : 'Aktualisieren'}
+              {loading ? 'Sucht im Web...' : 'Aktualisieren'}
             </button>
           </div>
         </div>
@@ -202,24 +157,18 @@ export default function AIRadar() {
 
       {/* Error State */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4">
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
           <div>
             <h3 className="font-semibold text-red-600 dark:text-red-400 text-sm">Verbindungsfehler</h3>
-            <p className="text-sm text-muted-custom mt-1 leading-relaxed">
-              {error}
-            </p>
+            <p className="text-sm text-muted-custom mt-1">{error}</p>
           </div>
         </div>
       )}
 
-      {/* Categories Tab Bar */}
+      {/* Tab Bar */}
       <div className="flex gap-2 mb-8 p-1 bg-surface rounded-lg w-fit border border-border-custom">
-        {[
-          { id: 'image', label: 'Bild-KI', icon: <ImageIcon className="w-4 h-4" /> },
-          { id: 'video', label: 'Video-KI', icon: <Video className="w-4 h-4" /> },
-          { id: 'coding', label: 'Dev & Coding', icon: <Code className="w-4 h-4" /> }
-        ].map(tab => (
+        {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -235,39 +184,37 @@ export default function AIRadar() {
         ))}
       </div>
 
-      {/* Content Area */}
+      {/* Content */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array(6).fill(0).map((_, i) => (
             <div key={i} className="h-72 bg-surface border border-border-custom rounded-xl animate-pulse p-6">
-              <div className="w-20 h-3 bg-surface-hover rounded-full mb-4"></div>
-              <div className="w-full h-5 bg-surface-hover rounded-full mb-3"></div>
-              <div className="w-3/4 h-5 bg-surface-hover rounded-full mb-6"></div>
+              <div className="w-20 h-3 bg-surface-hover rounded-full mb-4" />
+              <div className="w-full h-5 bg-surface-hover rounded-full mb-3" />
+              <div className="w-3/4 h-5 bg-surface-hover rounded-full mb-6" />
               <div className="space-y-2">
-                <div className="h-2 bg-surface-hover rounded-full w-full"></div>
-                <div className="h-2 bg-surface-hover rounded-full w-5/6"></div>
+                <div className="h-2 bg-surface-hover rounded-full w-full" />
+                <div className="h-2 bg-surface-hover rounded-full w-5/6" />
               </div>
             </div>
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {news[activeTab as keyof News]?.length > 0 ? (
-            news[activeTab as keyof News].map((item, idx) => (
+          {currentItems.length > 0 ? (
+            currentItems.map((item, idx) => (
               <article
                 key={idx}
                 className="group flex flex-col bg-surface border border-border-custom rounded-xl p-6 transition-all hover:bg-surface-hover hover:border-accent hover:-translate-y-1 relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-linear-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-linear-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                 <div className="relative z-10 flex justify-between items-start mb-4 gap-4">
                   <span className="text-xs font-bold text-accent uppercase tracking-wide shrink-0">
-                    {item.source || 'News'}
+                    {item.source || 'KI-News'}
                   </span>
                   {item.date && (
-                    <span className="text-xs text-muted-custom font-medium">
-                      {item.date}
-                    </span>
+                    <span className="text-xs text-muted-custom font-medium">{item.date}</span>
                   )}
                 </div>
 
@@ -291,21 +238,19 @@ export default function AIRadar() {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between text-xs font-semibold text-accent group/link border-t border-border-custom pt-4 hover:text-accent transition-colors relative z-10"
+                  className="flex items-center justify-between text-xs font-semibold text-accent border-t border-border-custom pt-4 hover:opacity-80 transition-opacity relative z-10"
                 >
                   MEHR LESEN
-                  <ChevronRight className="w-4 h-4 transition-transform group-hover/link:translate-x-1" />
+                  <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </a>
               </article>
             ))
           ) : (
-            !loading && !error && (
+            !error && (
               <div className="col-span-full text-center py-16 bg-surface border border-dashed border-border-custom rounded-xl">
                 <Info className="w-12 h-12 text-muted-custom/50 mx-auto mb-4" />
-                <h3 className="text-foreground font-semibold mb-2">Keine Daten verfügbar</h3>
-                <p className="text-muted-custom text-sm max-w-xs mx-auto">
-                  Für diese Kategorie gibt es momentan keine News. Versuche es mit einer anderen Kategorie.
-                </p>
+                <h3 className="text-foreground font-semibold mb-2">Keine Daten</h3>
+                <p className="text-muted-custom text-sm">Klicke auf „Aktualisieren" um die neuesten KI-News zu laden.</p>
               </div>
             )
           )}
