@@ -13,14 +13,6 @@ import {
   GitBranch,
 } from 'lucide-react';
 
-const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? '';
-
-interface News {
-  models: NewsItem[];
-  tools: NewsItem[];
-  opensource: NewsItem[];
-}
-
 interface NewsItem {
   title: string;
   summary: string;
@@ -30,60 +22,10 @@ interface NewsItem {
   date?: string;
 }
 
-const TODAY = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-const QUERIES = {
-  models: `Heute ist der ${TODAY}. Durchsuche das Web nach den allerneuesten KI-Sprachmodellen und multimodalen Modellen (LLMs, Image, Video, Audio). Fokus auf Releases und Ankündigungen der letzten 7 Tage. Quellen: Anthropic Blog, OpenAI Blog, Google DeepMind, Meta AI, Mistral, xAI, Arxiv, The Verge, TechCrunch. Gib mindestens 5 aktuelle Artikel zurück.`,
-  tools: `Heute ist der ${TODAY}. Durchsuche das Web nach brandneuen KI-Tools, Apps, APIs und Produkten der letzten 7 Tage. Fokus auf neue Features, Launches, Updates bei Tools wie Cursor, GitHub Copilot, Perplexity, Midjourney, RunwayML, ElevenLabs, Hugging Face Spaces, und andere KI-Produkte. Gib mindestens 5 aktuelle Artikel zurück.`,
-  opensource: `Heute ist der ${TODAY}. Durchsuche GitHub Trending, Hugging Face und Arxiv nach den aktuellsten Open-Source KI-Projekten, Modellen und Paper-Releases der letzten 7 Tage. Fokus auf neue Repos mit vielen Stars, neue Hugging Face Modelle, neue Arxiv-Paper. Gib mindestens 5 aktuelle Einträge zurück.`,
-};
-
-async function fetchGeminiNews(query: string, retryCount = 0): Promise<NewsItem[]> {
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-  const payload = {
-    contents: [{
-      parts: [{
-        text: query + '\n\nAntworte NUR mit einem JSON-Objekt (kein Markdown, keine Erklärungen): {"articles": [{"title":"...","summary":"...","source":"...","url":"...","tags":["..."],"date":"TT.MM.JJJJ"}]}'
-      }]
-    }],
-    tools: [{ google_search: {} }],
-    generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 2048,
-    }
-  };
-
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      if (response.status === 429 && retryCount < 3) {
-        const delay = Math.pow(2, retryCount) * 1500;
-        await new Promise(r => setTimeout(r, delay));
-        return fetchGeminiNews(query, retryCount + 1);
-      }
-      if (response.status === 401) throw new Error('Authentifizierungsfehler (401). Bitte API-Key prüfen.');
-      if (response.status === 403) throw new Error('Zugriff verweigert (403). Generative Language API aktivieren.');
-      throw new Error(`API Fehler: ${response.status}`);
-    }
-
-    const result = await response.json();
-    const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-
-    // Extract JSON from response (grounding may add extra text)
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return [];
-    const parsed = JSON.parse(match[0]);
-    return parsed.articles ?? [];
-  } catch (err) {
-    if (err instanceof SyntaxError) return [];
-    throw err;
-  }
+interface News {
+  models: NewsItem[];
+  tools: NewsItem[];
+  opensource: NewsItem[];
 }
 
 export default function AIRadar() {
@@ -98,14 +40,13 @@ export default function AIRadar() {
     setError(null);
 
     try {
-      const [models, tools, opensource] = await Promise.all([
-        fetchGeminiNews(QUERIES.models).catch(e => { setError(e.message); return []; }),
-        fetchGeminiNews(QUERIES.tools).catch(e => { setError(e.message); return []; }),
-        fetchGeminiNews(QUERIES.opensource).catch(e => { setError(e.message); return []; }),
-      ]);
-
-      setNews({ models, tools, opensource });
+      const res = await fetch('/api/ai-radar');
+      if (!res.ok) throw new Error(`Fehler beim Laden (${res.status})`);
+      const data: News = await res.json();
+      setNews(data);
       setLastUpdated(new Date().toLocaleTimeString('de-DE'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unbekannter Fehler');
     } finally {
       setLoading(false);
     }
@@ -132,7 +73,7 @@ export default function AIRadar() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground">AI RADAR</h2>
-              <div className="text-xs text-muted-custom font-medium">Neueste KI-Modelle & Tools – Live via Google Search</div>
+              <div className="text-xs text-muted-custom font-medium">Neueste KI-Modelle & Tools – Live via RSS</div>
             </div>
           </div>
 
@@ -149,7 +90,7 @@ export default function AIRadar() {
               className="group relative flex items-center gap-2 bg-accent text-white hover:opacity-90 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-semibold transition-all active:scale-95"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-              {loading ? 'Sucht im Web...' : 'Aktualisieren'}
+              {loading ? 'Lädt RSS-Feeds...' : 'Aktualisieren'}
             </button>
           </div>
         </div>
