@@ -151,9 +151,13 @@ export default function NewProjectPage() {
     async function handleSubmit(formData: FormData) {
         setIsPending(true)
         try {
-            await createProject(formData)
-            router.push('/admin')
-            router.refresh()
+            const result = await createProject(formData)
+            if (result.success) {
+                router.push('/admin')
+                router.refresh()
+            } else {
+                alert(result.error || 'Fehler beim Speichern des Projekts')
+            }
         } catch (error) {
             console.error(error)
             alert('Fehler beim Speichern des Projekts')

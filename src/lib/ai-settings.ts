@@ -1,5 +1,4 @@
-import { writeFile, readFile } from 'fs/promises';
-import { join } from 'path';
+import { prisma } from '@/lib/prisma';
 
 export interface AISettings {
     provider: 'google' | 'anthropic' | 'mistral';
@@ -7,17 +6,20 @@ export interface AISettings {
     apiKey: string;
 }
 
-const SETTINGS_PATH = join(process.cwd(), 'ai-settings.json');
-
 export async function getAISettings(): Promise<AISettings | null> {
     try {
-        const content = await readFile(SETTINGS_PATH, 'utf-8');
-        return JSON.parse(content);
-    } catch (e) {
+        const row = await prisma.setting.findUnique({ where: { key: 'ai-settings' } });
+        if (!row) return null;
+        return JSON.parse(row.value) as AISettings;
+    } catch {
         return null;
     }
 }
 
 export async function saveAISettings(settings: AISettings) {
-    await writeFile(SETTINGS_PATH, JSON.stringify(settings, null, 2));
+    await prisma.setting.upsert({
+        where: { key: 'ai-settings' },
+        update: { value: JSON.stringify(settings) },
+        create: { key: 'ai-settings', value: JSON.stringify(settings) },
+    });
 }

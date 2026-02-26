@@ -21,7 +21,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams
   const activeCategory = params.category || 'all'
   const projects = await getProjects()
-  const testimonials = await getTestimonials()
+  const testimonials = await getTestimonials().catch(() => [])
 
   return (
     <div className="min-h-screen">
