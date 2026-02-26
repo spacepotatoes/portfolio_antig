@@ -204,3 +204,17 @@ html.dark .logo-image {
   line-height: 1.1;
   color: var(--muted);
 }
+/* Testimonials Marquee */
+@keyframes marquee-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+@keyframes marquee-right {
+  0% { transform: translateX(-33.333%); }
+  100% { transform: translateX(0); }
+}
+
+@theme {
+  --animate-marquee-left: marquee-left 30s linear infinite;
+  --animate-marquee-right: marquee-right 30s linear infinite;
+}

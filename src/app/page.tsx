@@ -1,9 +1,11 @@
 import { getProjects } from '@/app/actions/projects'
+import { getTestimonials } from '@/app/actions/testimonials'
 import ProjectGrid from '@/components/ProjectGrid'
 import Button from '@/components/Button'
 import AIRadar from '@/components/AIRadar'
+import TestimonialsCarousel from '@/components/TestimonialsCarousel'
 import Image from 'next/image'
-import { Mail, Github, Linkedin, Instagram, Code, Palette, Rocket, Sparkles, Zap } from 'lucide-react'
+import { Mail, Github, Linkedin, Instagram, Code, Palette, Rocket, Sparkles, Zap, Quote } from 'lucide-react'
 
 const BehanceIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -19,6 +21,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams
   const activeCategory = params.category || 'all'
   const projects = await getProjects()
+  const testimonials = await getTestimonials()
 
   return (
     <div className="min-h-screen">
@@ -146,6 +149,22 @@ export default async function Home({ searchParams }: HomeProps) {
           <AIRadar />
         </div>
       </section>
+
+      {/* Testimonials */}
+      {testimonials.length > 0 && (
+        <section className="py-24 border-t border-border-custom overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 mb-14">
+            <div className="flex items-center gap-3 mb-3">
+              <Quote className="w-5 h-5 text-accent" />
+              <span className="text-sm text-muted-custom font-bold tracking-widest uppercase">Kundenstimmen</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold leading-tight">
+              Was Kunden sagen
+            </h2>
+          </div>
+          <TestimonialsCarousel testimonials={testimonials} />
+        </section>
+      )}
 
       {/* Contact CTA */}
       <section className="py-32 px-6 text-center">

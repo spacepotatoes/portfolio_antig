@@ -1,6 +1,6 @@
 import { getProjects, deleteProject } from '@/app/actions/projects'
 import Link from 'next/link'
-import { Trash2, Plus, ExternalLink, Pencil, Settings } from 'lucide-react'
+import { Trash2, Plus, ExternalLink, Pencil, Settings, Star } from 'lucide-react'
 
 export default async function AdminDashboard() {
     const projects = await getProjects()
@@ -17,6 +17,13 @@ export default async function AdminDashboard() {
                         >
                             <Settings size={16} />
                             KI Einstellungen
+                        </Link>
+                        <Link
+                            href="/admin/testimonials"
+                            className="flex items-center gap-2 text-muted-custom hover:text-foreground px-3 py-2 rounded-md transition-colors text-sm border border-border-custom"
+                        >
+                            <Star size={16} />
+                            Testimonials
                         </Link>
                         <Link
                             href="/admin/new"
