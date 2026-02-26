@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Github, Instagram, Mail } from 'lucide-react'
+import { Github, Instagram, Linkedin, Mail } from 'lucide-react'
 
 const BehanceIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -35,7 +35,7 @@ export default function Footer() {
             {/* Social Icons */}
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://behance.net"
+                href="https://www.behance.net/giuseppetroiano4"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Behance"
@@ -44,7 +44,7 @@ export default function Footer() {
                 <BehanceIcon />
               </a>
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/_giuseppetroiano"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -53,13 +53,22 @@ export default function Footer() {
                 <Instagram size={18} />
               </a>
               <a
-                href="https://github.com"
+                href="https://github.com/spacepotatoes"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
                 className="w-10 h-10 flex items-center justify-center rounded-xl border border-border-custom text-muted-custom hover:text-foreground hover:border-foreground transition-all active:scale-95"
               >
                 <Github size={18} />
+              </a>
+              <a
+                href="https://www.linkedin.com/in/giuseppe-troiano-759941186/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="w-10 h-10 flex items-center justify-center rounded-xl border border-border-custom text-muted-custom hover:text-foreground hover:border-foreground transition-all active:scale-95"
+              >
+                <Linkedin size={18} />
               </a>
             </div>
           </div>
