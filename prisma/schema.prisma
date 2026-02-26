@@ -29,5 +29,8 @@ model Project {
   empathyFeels     String?
   empathyDoes      String?
 
+  // Gallery
+  galleryImages    String?  // JSON array of image URLs
+
   createdAt        DateTime @default(now())
 }

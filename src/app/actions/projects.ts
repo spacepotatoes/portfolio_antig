@@ -100,6 +100,23 @@ export async function createProject(formData: FormData) {
         }
     }
 
+    // Upload Gallery Images
+    const galleryUrls: string[] = []
+    for (let i = 0; i < 5; i++) {
+        const galleryFile = formData.get(`galleryFile_${i}`) as File | null
+        const galleryUrlInput = formData.get(`galleryUrl_${i}`) as string
+        if (galleryFile && galleryFile.size > 0) {
+            try {
+                galleryUrls.push(await uploadToCloudinary(galleryFile, 'gallery'))
+            } catch (error) {
+                console.error(`Cloudinary Upload Error (Gallery ${i}):`, error)
+            }
+        } else if (galleryUrlInput) {
+            galleryUrls.push(galleryUrlInput)
+        }
+    }
+    const galleryImages = galleryUrls.length > 0 ? JSON.stringify(galleryUrls) : null
+
     await (prisma.project as any).create({
         data: {
             title,
@@ -116,6 +133,7 @@ export async function createProject(formData: FormData) {
             empathyThinks,
             empathyFeels,
             empathyDoes,
+            galleryImages,
         } as any,
     })
 
@@ -171,6 +189,25 @@ export async function updateProject(id: number, formData: FormData) {
         }
     }
 
+    // Upload Gallery Images (merge existing with new)
+    const existingGalleryJson = formData.get('existingGallery') as string
+    const existingGallery: string[] = existingGalleryJson ? JSON.parse(existingGalleryJson) : []
+    const galleryUrls: string[] = [...existingGallery]
+    for (let i = 0; i < 5; i++) {
+        const galleryFile = formData.get(`galleryFile_${i}`) as File | null
+        const galleryUrlInput = formData.get(`galleryUrl_${i}`) as string
+        if (galleryFile && galleryFile.size > 0) {
+            try {
+                galleryUrls.push(await uploadToCloudinary(galleryFile, 'gallery'))
+            } catch (error) {
+                console.error(`Cloudinary Upload Error (Gallery ${i}):`, error)
+            }
+        } else if (galleryUrlInput) {
+            galleryUrls.push(galleryUrlInput)
+        }
+    }
+    const galleryImages = galleryUrls.length > 0 ? JSON.stringify(galleryUrls) : null
+
     await (prisma.project as any).update({
         where: { id },
         data: {
@@ -188,6 +225,7 @@ export async function updateProject(id: number, formData: FormData) {
             empathyThinks,
             empathyFeels,
             empathyDoes,
+            galleryImages,
         } as any,
     })
 

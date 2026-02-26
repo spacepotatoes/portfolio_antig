@@ -4,7 +4,7 @@ import { createProject } from '@/app/actions/projects'
 import { generateUXData } from '@/app/actions/ai'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Upload, Loader2, Sparkles, User, Brain, Layers, FileJson, X, Info } from 'lucide-react'
+import { ChevronLeft, Upload, Loader2, Sparkles, User, Brain, Layers, FileJson, X, Info, Plus, Images } from 'lucide-react'
 import { useState } from 'react'
 
 export default function NewProjectPage() {
@@ -31,6 +31,24 @@ export default function NewProjectPage() {
     const [empathyThinks, setEmpathyThinks] = useState('')
     const [empathyFeels, setEmpathyFeels] = useState('')
     const [empathyDoes, setEmpathyDoes] = useState('')
+
+    // Image Previews
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const [personaPreview, setPersonaPreview] = useState<string | null>(null)
+
+    const [websiteUrl, setWebsiteUrl] = useState('')
+    const [url2, setUrl2] = useState('')
+    const [url3, setUrl3] = useState('')
+
+    // Overwrite settings for AI generation
+    const [overwrite, setOverwrite] = useState({
+        title: false, description: false, techStack: false,
+        projectImageUrl: false, persona: false, empathy: false,
+        painPoints: false, userJourney: false, gallery: false,
+    })
+
+    // Gallery state: array of { preview, url }
+    const [gallerySlots, setGallerySlots] = useState<{ preview: string | null, url: string }[]>([])
 
     const handleImportJson = () => {
         try {
@@ -92,23 +110,37 @@ export default function NewProjectPage() {
     }
 
     async function handleAIGenerate() {
-        if (!title || !description) {
-            alert('Bitte gib zuerst einen Titel und eine Beschreibung ein.')
+        const hasUrl = websiteUrl || url2 || url3
+        if (!hasUrl && (!title || !description)) {
+            alert('Bitte gib mindestens eine URL oder Titel + Beschreibung ein.')
             return
         }
 
         setIsGenerating(true)
         try {
-            const data = await generateUXData(title, description)
-            setPersonaName(data.personaName || '')
-            setPersonaBio(data.personaBio || '')
-            setPersonaImage(data.personaImage || '')
-            setPainPoints(Array.isArray(data.painPoints) ? data.painPoints.join(', ') : data.painPoints || '')
-            setEmpathySays(data.empathySays || '')
-            setEmpathyThinks(data.empathyThinks || '')
-            setEmpathyFeels(data.empathyFeels || '')
-            setEmpathyDoes(data.empathyDoes || '')
-            setUserJourneyData(JSON.stringify(data.userJourneyData))
+            const data = await generateUXData(
+                title,
+                description,
+                websiteUrl || undefined,
+                url2 || undefined,
+                url3 || undefined
+            )
+            if ((!title || overwrite.title) && data.title) setTitle(data.title)
+            if ((!description || overwrite.description) && data.description) setDescription(data.description)
+            if ((!techStack || overwrite.techStack) && data.techStack) setTechStack(data.techStack)
+            if ((!projectImageUrl || overwrite.projectImageUrl) && data.projectImageUrl) setProjectImageUrl(data.projectImageUrl)
+            if (!personaName || overwrite.persona) setPersonaName(data.personaName || '')
+            if (!personaBio || overwrite.persona) setPersonaBio(data.personaBio || '')
+            if (!personaImage || overwrite.persona) setPersonaImage(data.personaImage || '')
+            if (!painPoints || overwrite.painPoints) setPainPoints(Array.isArray(data.painPoints) ? data.painPoints.join(', ') : data.painPoints || '')
+            if (!empathySays || overwrite.empathy) setEmpathySays(data.empathySays || '')
+            if (!empathyThinks || overwrite.empathy) setEmpathyThinks(data.empathyThinks || '')
+            if (!empathyFeels || overwrite.empathy) setEmpathyFeels(data.empathyFeels || '')
+            if (!empathyDoes || overwrite.empathy) setEmpathyDoes(data.empathyDoes || '')
+            if ((!userJourneyData || overwrite.userJourney) && data.userJourneyData) setUserJourneyData(JSON.stringify(data.userJourneyData))
+            if ((gallerySlots.length === 0 || overwrite.gallery) && Array.isArray(data.galleryImages) && data.galleryImages.length > 0) {
+                setGallerySlots(data.galleryImages.slice(0, 5).map((url: string) => ({ preview: url, url })))
+            }
         } catch (error: any) {
             alert(error.message || 'KI Generierung fehlgeschlagen.')
         } finally {
@@ -190,6 +222,45 @@ export default function NewProjectPage() {
                 )}
 
                 <form action={handleSubmit} className="space-y-12">
+
+                    {/* KI-Analyse */}
+                    <section className="space-y-5 bg-surface p-8 rounded-3xl border border-border-custom shadow-sm">
+                        <h2 className="text-xl font-bold flex items-center gap-2 pb-4 border-b border-border-custom">
+                            <Sparkles size={18} className="text-yellow-500" /> KI-Analyse
+                        </h2>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-muted-custom">URLs — KI analysiert alle Quellen</label>
+                            <input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} className="w-full bg-background border border-border-custom rounded-xl px-4 py-3 focus:border-foreground outline-none transition-colors text-sm" placeholder="URL 1 — z.B. Website" />
+                            <input type="url" value={url2} onChange={(e) => setUrl2(e.target.value)} className="w-full bg-background border border-border-custom rounded-xl px-4 py-3 focus:border-foreground outline-none transition-colors text-sm" placeholder="URL 2 — z.B. GitHub, Behance, ..." />
+                            <input type="url" value={url3} onChange={(e) => setUrl3(e.target.value)} className="w-full bg-background border border-border-custom rounded-xl px-4 py-3 focus:border-foreground outline-none transition-colors text-sm" placeholder="URL 3 — z.B. Live-Demo, Figma, ..." />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-custom mb-2">Gefüllte Felder überschreiben erlauben</p>
+                            <div className="flex flex-wrap gap-x-5 gap-y-2">
+                                {([
+                                    { key: 'title', label: 'Titel', hasValue: !!title },
+                                    { key: 'description', label: 'Beschreibung', hasValue: !!description },
+                                    { key: 'techStack', label: 'Tech-Stack', hasValue: !!techStack },
+                                    { key: 'projectImageUrl', label: 'Hauptbild', hasValue: !!projectImageUrl },
+                                    { key: 'persona', label: 'Persona', hasValue: !!(personaName || personaBio) },
+                                    { key: 'empathy', label: 'Empathy Map', hasValue: !!(empathySays || empathyThinks) },
+                                    { key: 'painPoints', label: 'Pain Points', hasValue: !!painPoints },
+                                    { key: 'userJourney', label: 'User Journey', hasValue: !!userJourneyData },
+                                    { key: 'gallery', label: 'Galerie', hasValue: gallerySlots.length > 0 },
+                                ] as { key: keyof typeof overwrite, label: string, hasValue: boolean }[]).map(({ key, label, hasValue }) => (
+                                    <label key={key} className={`flex items-center gap-1.5 text-xs select-none ${hasValue ? 'cursor-pointer text-foreground' : 'cursor-not-allowed opacity-25'}`}>
+                                        <input type="checkbox" checked={overwrite[key]} onChange={(e) => setOverwrite(prev => ({ ...prev, [key]: e.target.checked }))} disabled={!hasValue} className="rounded accent-yellow-500" />
+                                        {label}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                        <button type="button" onClick={handleAIGenerate} disabled={isGenerating} className="w-full bg-surface-hover text-foreground py-4 rounded-xl font-black uppercase tracking-widest hover:opacity-80 transition-opacity flex items-center justify-center gap-3 border border-border-custom">
+                            {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Sparkles className="text-yellow-500" size={20} />}
+                            {isGenerating ? 'KI analysiert...' : 'Alle Felder mit KI befüllen'}
+                        </button>
+                    </section>
+
                     {/* Basis Info */}
                     <section className="space-y-6 bg-surface p-8 rounded-3xl border border-border-custom shadow-sm">
                         <div className="flex justify-between items-center pb-4 border-b border-border-custom">
@@ -264,17 +335,6 @@ export default function NewProjectPage() {
                                 </div>
                             </div>
 
-                            <div className="pt-6">
-                                <button
-                                    type="button"
-                                    onClick={handleAIGenerate}
-                                    disabled={isGenerating}
-                                    className="w-full bg-surface-hover text-foreground py-4 rounded-xl font-black uppercase tracking-widest hover:opacity-80 transition-opacity flex items-center justify-center gap-3 border border-border-custom"
-                                >
-                                    {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Sparkles className="text-yellow-500" size={20} />}
-                                    {isGenerating ? 'Generiere UX Case Study...' : 'UX Details mit KI generieren'}
-                                </button>
-                            </div>
                         </div>
                     </section>
 
@@ -292,14 +352,24 @@ export default function NewProjectPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="relative group flex flex-col items-center justify-center border border-dashed border-border-custom rounded-xl p-4 hover:border-foreground transition-colors cursor-pointer bg-background/50">
-                                        <Upload className="text-muted-custom group-hover:text-foreground transition-colors mb-1" size={16} />
-                                        <span className="text-muted-custom group-hover:text-foreground transition-colors text-[10px] font-bold uppercase tracking-widest">Persona Bild</span>
+                                    <div className={`relative group flex flex-col items-center justify-center border border-dashed rounded-xl hover:border-foreground transition-colors cursor-pointer overflow-hidden bg-background/50 ${personaPreview ? 'border-accent' : 'border-border-custom p-4'}`}>
+                                        {personaPreview ? (
+                                            <img src={personaPreview} alt="Persona" className="w-full h-20 object-cover" />
+                                        ) : (
+                                            <>
+                                                <Upload className="text-muted-custom group-hover:text-foreground transition-colors mb-1" size={16} />
+                                                <span className="text-muted-custom group-hover:text-foreground transition-colors text-[10px] font-bold uppercase tracking-widest">Persona Bild</span>
+                                            </>
+                                        )}
                                         <input
                                             id="personaFile"
                                             name="personaFile"
                                             type="file"
                                             accept="image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0]
+                                                if (file) setPersonaPreview(URL.createObjectURL(file))
+                                            }}
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                         />
                                     </div>
@@ -353,14 +423,24 @@ export default function NewProjectPage() {
                             <Upload size={18} /> Media & Assets
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                            <div className="relative group flex flex-col items-center justify-center border-2 border-dashed border-border-custom rounded-3xl p-12 hover:border-foreground transition-colors group bg-background/30">
-                                <Upload className="text-muted-custom group-hover:text-foreground transition-colors mb-2" size={32} />
-                                <span className="text-muted-custom group-hover:text-foreground transition-colors text-sm font-bold uppercase tracking-widest">Hauptbild hochladen</span>
+                            <div className={`relative group flex flex-col items-center justify-center border-2 border-dashed rounded-3xl hover:border-foreground transition-colors cursor-pointer overflow-hidden bg-background/30 ${imagePreview ? 'border-accent' : 'border-border-custom p-12'}`}>
+                                {imagePreview ? (
+                                    <img src={imagePreview} alt="Vorschau" className="w-full h-48 object-cover" />
+                                ) : (
+                                    <>
+                                        <Upload className="text-muted-custom group-hover:text-foreground transition-colors mb-2" size={32} />
+                                        <span className="text-muted-custom group-hover:text-foreground transition-colors text-sm font-bold uppercase tracking-widest">Hauptbild hochladen</span>
+                                    </>
+                                )}
                                 <input
                                     id="imageFile"
                                     name="imageFile"
                                     type="file"
                                     accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) setImagePreview(URL.createObjectURL(file))
+                                    }}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 />
                             </div>
@@ -377,6 +457,79 @@ export default function NewProjectPage() {
                                 />
                             </div>
                         </div>
+                    </section>
+
+                    {/* Gallery */}
+                    <section className="space-y-6 bg-surface p-8 rounded-3xl border border-border-custom shadow-sm">
+                        <div className="flex justify-between items-center pb-4 border-b border-border-custom">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                <Images size={18} /> Bildergalerie
+                            </h2>
+                            {gallerySlots.length < 5 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setGallerySlots([...gallerySlots, { preview: null, url: '' }])}
+                                    className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-accent hover:opacity-80 transition-opacity"
+                                >
+                                    <Plus size={14} /> Bild hinzufügen
+                                </button>
+                            )}
+                        </div>
+                        {gallerySlots.length === 0 ? (
+                            <p className="text-sm text-muted-custom text-center py-4">Noch keine Galeriebilder. Klicke auf "Bild hinzufügen".</p>
+                        ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {gallerySlots.map((slot, i) => (
+                                    <div key={i} className="space-y-2">
+                                        <div className={`relative group flex flex-col items-center justify-center border-2 border-dashed rounded-2xl hover:border-foreground transition-colors cursor-pointer overflow-hidden bg-background/30 ${slot.preview ? 'border-accent' : 'border-border-custom aspect-video'}`}>
+                                            {slot.preview ? (
+                                                <img src={slot.preview} alt={`Galerie ${i + 1}`} className="w-full aspect-video object-cover" />
+                                            ) : (
+                                                <>
+                                                    <Upload className="text-muted-custom group-hover:text-foreground mb-1" size={20} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-custom">Bild {i + 1}</span>
+                                                </>
+                                            )}
+                                            <input
+                                                name={`galleryFile_${i}`}
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0]
+                                                    if (file) {
+                                                        const updated = [...gallerySlots]
+                                                        updated[i] = { ...updated[i], preview: URL.createObjectURL(file) }
+                                                        setGallerySlots(updated)
+                                                    }
+                                                }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            />
+                                        </div>
+                                        <div className="flex gap-2 items-center">
+                                            <input
+                                                name={`galleryUrl_${i}`}
+                                                type="url"
+                                                value={slot.url}
+                                                onChange={(e) => {
+                                                    const updated = [...gallerySlots]
+                                                    updated[i] = { ...updated[i], url: e.target.value }
+                                                    setGallerySlots(updated)
+                                                }}
+                                                placeholder="Oder URL"
+                                                className="flex-1 bg-background border border-border-custom rounded-lg px-3 py-2 text-xs outline-none focus:border-foreground transition-colors"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setGallerySlots(gallerySlots.filter((_, idx) => idx !== i))}
+                                                className="text-muted-custom hover:text-red-500 transition-colors shrink-0"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </section>
 
                     <button

@@ -1,6 +1,6 @@
 import { getProjects, deleteProject } from '@/app/actions/projects'
 import Link from 'next/link'
-import { Trash2, Plus, ExternalLink, Pencil } from 'lucide-react'
+import { Trash2, Plus, ExternalLink, Pencil, Settings } from 'lucide-react'
 
 export default async function AdminDashboard() {
     const projects = await getProjects()
@@ -10,13 +10,22 @@ export default async function AdminDashboard() {
             <div className="max-w-6xl mx-auto">
                 <header className="flex justify-between items-center mb-12 border-b border-border-custom pb-6">
                     <h1 className="text-3xl font-bold tracking-tight">Portfolio Admin</h1>
-                    <Link
-                        href="/admin/new"
-                        className="flex items-center gap-2 bg-foreground text-background px-4 py-2 rounded-md font-medium hover:opacity-90 transition-opacity shadow-sm"
-                    >
-                        <Plus size={20} />
-                        Neues Projekt
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/admin/settings"
+                            className="flex items-center gap-2 text-muted-custom hover:text-foreground px-3 py-2 rounded-md transition-colors text-sm"
+                        >
+                            <Settings size={16} />
+                            KI Einstellungen
+                        </Link>
+                        <Link
+                            href="/admin/new"
+                            className="flex items-center gap-2 bg-foreground text-background px-4 py-2 rounded-md font-medium hover:opacity-90 transition-opacity shadow-sm"
+                        >
+                            <Plus size={20} />
+                            Neues Projekt
+                        </Link>
+                    </div>
                 </header>
 
                 <div className="bg-surface rounded-xl border border-border-custom overflow-hidden shadow-sm">

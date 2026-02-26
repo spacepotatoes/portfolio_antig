@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import UserJourneyChart from '@/components/UserJourneyChart'
 import EmpathyMap from '@/components/EmpathyMap'
 import ChatTriggerButton from '@/components/ChatTriggerButton'
+import GalleryLightbox from '@/components/GalleryLightbox'
 import { ArrowLeft, AlertCircle, Layers, MapPin } from 'lucide-react'
 import Link from 'next/link'
 
@@ -14,6 +15,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
     const techItems: string[] = project.techStack?.split(',').map((t: string) => t.trim()).filter(Boolean) ?? []
     const painItems: string[] = (project.painPoints as string)?.split(',').map((p: string) => p.trim()).filter(Boolean) ?? []
+    const galleryItems: string[] = project.galleryImages ? JSON.parse(project.galleryImages) : []
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -75,6 +77,19 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                             {project.description}
                         </p>
                     </div>
+
+                    {/* Gallery */}
+                    {galleryItems.length > 0 && (
+                        <div className="border-t border-border-custom pt-16 space-y-6">
+                            <div>
+                                <span className="text-sm text-muted-custom font-bold tracking-widest uppercase mb-3 block">
+                                    Projektbilder
+                                </span>
+                                <h2 className="text-3xl font-bold">Bildergalerie</h2>
+                            </div>
+                            <GalleryLightbox images={galleryItems} projectTitle={project.title} />
+                        </div>
+                    )}
 
                     {/* Empathy Map */}
                     {(project.empathySays || project.empathyThinks || project.empathyFeels || project.empathyDoes) && (

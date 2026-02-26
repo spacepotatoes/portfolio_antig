@@ -116,7 +116,7 @@ export default function Footer() {
             © {year} Giuseppe Troiano
           </p>
           <p className="text-xs text-muted-custom tracking-widest uppercase">
-            Designed & Built with Antigravity
+            Designed & Built by Giuseppe Troiano
           </p>
         </div>
 
