@@ -27,7 +27,7 @@ export default async function Home({ searchParams }: HomeProps) {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-[75vh] flex items-center justify-center px-6 pt-20 overflow-hidden">
-        <div className="absolute left-1/4 top-1/2 -translate-y-1/2 -translate-x-56 w-80 h-80 hidden lg:block">
+        <div className="absolute left-1/4 top-1/2 -translate-y-1/2 -translate-x-56 w-64 h-64 hidden lg:block">
           <Image
             src="/Giuseppe_illustration_designers_studio Kopie.webp"
             alt="Giuseppe Illustration"
@@ -59,7 +59,7 @@ export default async function Home({ searchParams }: HomeProps) {
           </div>
         </div>
 
-        <div className="absolute right-1/4 top-1/2 -translate-y-1/2 translate-x-56 w-80 h-80 hidden lg:block">
+        <div className="absolute right-1/4 top-1/2 -translate-y-1/2 translate-x-56 w-64 h-64 hidden lg:block">
           <Image
             src="/Giuseppe_illustration_interlocked_02 Kopie.webp"
             alt="Giuseppe Illustration"

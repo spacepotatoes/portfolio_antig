@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   RefreshCw,
   Clock,
@@ -11,6 +11,8 @@ import {
   Cpu,
   Wrench,
   GitBranch,
+  Palette,
+  Monitor,
 } from 'lucide-react';
 
 interface NewsItem {
@@ -20,16 +22,19 @@ interface NewsItem {
   url: string;
   tags?: string[];
   date?: string;
+  image?: string;
 }
 
 interface News {
   models: NewsItem[];
   tools: NewsItem[];
   opensource: NewsItem[];
+  graphicdesign: NewsItem[];
+  webdesign: NewsItem[];
 }
 
 export default function AIRadar() {
-  const [news, setNews] = useState<News>({ models: [], tools: [], opensource: [] });
+  const [news, setNews] = useState<News>({ models: [], tools: [], opensource: [], graphicdesign: [], webdesign: [] });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('models');
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +63,8 @@ export default function AIRadar() {
     { id: 'models', label: 'Neue Modelle', icon: <Cpu className="w-4 h-4" /> },
     { id: 'tools', label: 'Tools & APIs', icon: <Wrench className="w-4 h-4" /> },
     { id: 'opensource', label: 'Open Source', icon: <GitBranch className="w-4 h-4" /> },
+    { id: 'graphicdesign', label: 'Grafikdesign', icon: <Palette className="w-4 h-4" /> },
+    { id: 'webdesign', label: 'Webdesign', icon: <Monitor className="w-4 h-4" /> },
   ];
 
   const currentItems = news[activeTab as keyof News] ?? [];
@@ -108,7 +115,7 @@ export default function AIRadar() {
       )}
 
       {/* Tab Bar */}
-      <div className="flex gap-2 mb-8 p-1 bg-surface rounded-lg w-fit border border-border-custom">
+      <div className="flex flex-wrap gap-2 mb-8 p-1 bg-surface rounded-lg w-fit border border-border-custom">
         {tabs.map(tab => (
           <button
             key={tab.id}
@@ -146,44 +153,61 @@ export default function AIRadar() {
             currentItems.map((item, idx) => (
               <article
                 key={idx}
-                className="group flex flex-col bg-surface border border-border-custom rounded-xl p-6 transition-all hover:bg-surface-hover hover:border-accent hover:-translate-y-1 relative overflow-hidden"
+                className="group flex flex-col bg-surface border border-border-custom rounded-xl transition-all hover:bg-surface-hover hover:border-accent hover:-translate-y-1 relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-linear-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                <div className="relative z-10 flex justify-between items-start mb-4 gap-4">
-                  <span className="text-xs font-bold text-accent uppercase tracking-wide shrink-0">
-                    {item.source || 'KI-News'}
-                  </span>
-                  {item.date && (
-                    <span className="text-xs text-muted-custom font-medium">{item.date}</span>
-                  )}
-                </div>
+                {/* Card Image */}
+                {item.image && (
+                  <div className="relative h-44 w-full overflow-hidden shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }}
+                    />
+                  </div>
+                )}
 
-                <h3 className="text-base font-bold text-foreground mb-3 group-hover:text-accent transition-colors leading-snug line-clamp-2 relative z-10">
-                  {item.title}
-                </h3>
-
-                <p className="text-sm text-muted-custom leading-relaxed mb-4 grow line-clamp-3 relative z-10">
-                  {item.summary}
-                </p>
-
-                <div className="flex flex-wrap gap-2 mb-4 relative z-10">
-                  {item.tags?.slice(0, 2).map((tag, tIdx) => (
-                    <span key={tIdx} className="text-xs font-medium text-accent bg-accent/10 px-2 py-1 rounded-full border border-accent/20">
-                      {tag}
+                <div className="flex flex-col grow p-6">
+                  <div className="relative z-10 flex justify-between items-start mb-4 gap-4">
+                    <span className="text-xs font-bold text-accent uppercase tracking-wide shrink-0">
+                      {item.source || 'News'}
                     </span>
-                  ))}
-                </div>
+                    {item.date && (
+                      <span className="text-xs text-muted-custom font-medium">{item.date}</span>
+                    )}
+                  </div>
 
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between text-xs font-semibold text-accent border-t border-border-custom pt-4 hover:opacity-80 transition-opacity relative z-10"
-                >
-                  MEHR LESEN
-                  <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </a>
+                  <h3 className="text-base font-bold text-foreground mb-3 group-hover:text-accent transition-colors leading-snug line-clamp-2 relative z-10">
+                    {item.title}
+                  </h3>
+
+                  <p className="text-sm text-muted-custom leading-relaxed mb-4 grow line-clamp-3 relative z-10">
+                    {item.summary}
+                  </p>
+
+                  {item.tags && item.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4 relative z-10">
+                      {item.tags.slice(0, 2).map((tag, tIdx) => (
+                        <span key={tIdx} className="text-xs font-medium text-accent bg-accent/10 px-2 py-1 rounded-full border border-accent/20">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between text-xs font-semibold text-accent border-t border-border-custom pt-4 hover:opacity-80 transition-opacity relative z-10"
+                  >
+                    MEHR LESEN
+                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </a>
+                </div>
               </article>
             ))
           ) : (
@@ -191,7 +215,7 @@ export default function AIRadar() {
               <div className="col-span-full text-center py-16 bg-surface border border-dashed border-border-custom rounded-xl">
                 <Info className="w-12 h-12 text-muted-custom/50 mx-auto mb-4" />
                 <h3 className="text-foreground font-semibold mb-2">Keine Daten</h3>
-                <p className="text-muted-custom text-sm">Klicke auf „Aktualisieren" um die neuesten KI-News zu laden.</p>
+                <p className="text-muted-custom text-sm">Klicke auf „Aktualisieren" um die neuesten News zu laden.</p>
               </div>
             )
           )}
